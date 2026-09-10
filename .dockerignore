@@ -1,0 +1,38 @@
+# Dependencies and build output — reinstalled/rebuilt inside the image
+node_modules
+.next
+out
+build
+.pnp
+.pnp.*
+
+# Secrets. Runtime values arrive via docker-compose env_file, never in a layer.
+.env
+.env.*
+
+# VCS and editor
+.git
+.gitignore
+.vscode
+.idea
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing and logs
+coverage
+*.log
+*.tsbuildinfo
+
+# Docker's own files
+Dockerfile
+Dockerfile.*
+docker-compose.yml
+.dockerignore
+
+# Schema and local-stack config. Nothing in the image reads these: the
+# migration is applied by hand in the Supabase SQL editor before first start,
+# and config.toml only configures the local dev stack.
+supabase

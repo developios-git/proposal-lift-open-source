@@ -1,0 +1,29 @@
+# ============================================================================
+# ProposalLift (open source)
+#
+#   1. Apply the schema to your Supabase project first: paste
+#      supabase/migrations/20260828000000_baseline.sql into the SQL editor.
+#      See README.md. Nothing here does it for you.
+#   2. cp .env.example .env    # fill in your Supabase values
+#   3. docker compose up --build
+#
+# Docker runs only the app. Postgres and authentication come from your own
+# Supabase project, and the schema is applied by hand before the first start.
+# ============================================================================
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      # NEXT_PUBLIC_* are build args, not just runtime env: Next.js inlines them
+      # into the client bundle during `next build`. This is not redundant with
+      # env_file below, which supplies the server-side values at runtime.
+      args:
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
+        NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY}
+        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
+    env_file: .env
+    ports:
+      - "${PORT:-3000}:3000"
+    restart: unless-stopped

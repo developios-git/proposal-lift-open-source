@@ -1,0 +1,33 @@
+# Normalize line endings so a clone on Windows produces files Linux can run.
+#
+# Git for Windows ships with core.autocrlf=true, which rewrites text files to
+# CRLF on checkout. For shell scripts that is fatal inside a container: the
+# shebang becomes `#!/bin/sh\r`, the kernel looks for an interpreter literally
+# named "/bin/sh\r", and exec fails with
+#
+#   exec /usr/local/bin/entrypoint.sh: no such file or directory
+#
+# which blames the script rather than the missing interpreter.
+
+# Let git decide what is text, and normalize to LF in the repository.
+* text=auto eol=lf
+
+# Files that MUST be LF in the working tree, on every platform.
+*.sh            text eol=lf
+Dockerfile      text eol=lf
+Dockerfile.*    text eol=lf
+*.sql           text eol=lf
+*.yml           text eol=lf
+*.yaml          text eol=lf
+.env.example    text eol=lf
+
+# Binary: never touch.
+*.png           binary
+*.jpg           binary
+*.jpeg          binary
+*.gif           binary
+*.ico           binary
+*.webp          binary
+*.woff          binary
+*.woff2         binary
+*.pdf           binary
