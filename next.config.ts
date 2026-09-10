@@ -11,10 +11,29 @@ import type { NextConfig } from "next";
  */
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 
+/**
+ * Whether this build is running on Vercel. `VERCEL` is `"1"` there and unset
+ * everywhere else.
+ */
+const isVercel = process.env.VERCEL === "1";
+
 const nextConfig: NextConfig = {
-  // Produces .next/standalone/server.js, which the Docker runtime stage copies.
-  // Without this the image has nothing to run.
-  output: "standalone",
+  /**
+   * Produces .next/standalone/server.js, which the Docker runtime stage copies.
+   * Without this the image has nothing to run.
+   *
+   * Off on Vercel, where it does not merely go unused but breaks the build.
+   * Vercel injects its own build adapter and packages the app itself, never
+   * reading .next/standalone. Meanwhile Next 16 builds with Turbopack by
+   * default, and Turbopack skips collectBuildTraces() — the only writer of
+   * .next/next-server.js.nft.json — because the adapter consumes per-entry
+   * trace files instead. writeStandaloneDirectory() still reads that one file,
+   * so the build dies with ENOENT immediately after the adapter's
+   * onBuildComplete hook. Next's own source flags the combination: "output:
+   * standalone might not be allowed if an adapter with onBuildComplete is
+   * configured" (next/dist/build/index.js).
+   */
+  output: isVercel ? undefined : "standalone",
 
   // Pin the workspace root. Turbopack otherwise infers it by walking up looking
   // for a lockfile, so a stray package-lock.json in a user's home directory
