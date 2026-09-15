@@ -1,0 +1,35 @@
+# Fails when package-lock.json can't be installed by the npm version pinned in
+# package.json (devEngines.packageManager). It runs the Docker image's own
+# dependency stage, so it is the exact `npm ci` a self-hoster's
+# `docker compose up --build` runs.
+#
+# A lockfile written by a different npm — by a contributor, or by an automated
+# dependency update — fails here instead of on someone else's machine.
+name: Lockfile
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - package.json
+      - package-lock.json
+      - Dockerfile
+      - .github/workflows/lockfile.yml
+  pull_request:
+    paths:
+      - package.json
+      - package-lock.json
+      - Dockerfile
+      - .github/workflows/lockfile.yml
+
+permissions:
+  contents: read
+
+jobs:
+  npm-ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install dependencies exactly as the Docker image does
+        run: docker build --target deps .

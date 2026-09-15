@@ -147,7 +147,8 @@ That's all. You do not need Node installed.
 
 **To work on the code (local path):**
 
-- Node 22 or newer, and npm 11 or newer — npm 10 fails on this lockfile
+- Node 22 or newer, and the exact npm version pinned in `package.json` — see
+  [The pinned npm version](#the-pinned-npm-version)
 - Docker, which the local Supabase stack runs on top of
 
 ## Choose your install path
@@ -589,6 +590,32 @@ The Supabase CLI runs through `npx supabase@<pinned version>` rather than as a d
 in eight per-platform binaries the app never uses, and those make the lockfile sensitive to which
 npm version installed it.
 
+### The pinned npm version
+
+npm is pinned to one exact version, in `devEngines.packageManager` in `package.json`. npm refuses
+`install`, `ci` and `run` under any other version, with `EBADDEVENGINES`. Install the pinned one
+(the command works in bash and PowerShell):
+
+```bash
+npm install -g npm@$(node -p "require('./package.json').devEngines.packageManager.version")
+```
+
+The pin exists because npm releases disagree about optional dependencies: a lockfile written by one
+version can fail `npm ci` under another — even between two 11.x releases. The Docker image reads the
+same field, so your machine and the image always run the same npm.
+
+**To move to a newer npm**, change it in that one place and regenerate the lockfile:
+
+```bash
+# 1. edit devEngines.packageManager.version in package.json, then:
+npm install -g npm@<new version>
+npm install
+# 2. commit package.json and package-lock.json together
+```
+
+CI (`.github/workflows/lockfile.yml`) runs the image's `npm ci` on every change to these files, so a
+lockfile from a different npm fails there rather than on someone's `docker compose up --build`.
+
 ## Project structure
 
 ```
@@ -682,7 +709,12 @@ to jobs.
 Nothing schedules them out of the box. See [Job alerts](#job-alerts).
 
 **`npm ci` fails with `Missing: @emnapi/runtime from lock file`.**
-npm 10 reading an npm 11 lockfile. Upgrade with `npm install -g npm@11`.
+`package-lock.json` was written by a different npm version than the one reading it. Install the
+[pinned npm](#the-pinned-npm-version), run `npm install`, and commit the updated lockfile.
+
+**npm fails with `EBADDEVENGINES`.**
+Your npm isn't the version pinned in `package.json`. The error prints the required version; install
+it with the command under [The pinned npm version](#the-pinned-npm-version).
 
 For extension problems see **Extension** in the running app, or
 [docs/extension.md](docs/extension.md); for scheduling see [docs/cron.md](docs/cron.md).

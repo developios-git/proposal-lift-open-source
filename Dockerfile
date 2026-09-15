@@ -17,22 +17,32 @@ ARG NODE_VERSION=22-slim
 
 
 # ----------------------------------------------------------------------------
-# Stage 1 — dependencies
+# Stage 0 — base: Node plus the project's pinned npm
+#
+# The npm version lives in exactly one place: devEngines.packageManager in
+# package.json. It is read from there rather than repeated here, because npm
+# versions disagree about optional-dependency trees (notably the @emnapi WASM
+# fallbacks). A lockfile written by one npm can fail `npm ci` under another with
+# "Missing: @emnapi/runtime from lock file" — even between two 11.x releases.
+#
+# devEngines also makes npm refuse `install`, `ci` and `run` under any other
+# version, so every stage that runs npm must start from here.
 # ----------------------------------------------------------------------------
-FROM node:${NODE_VERSION} AS deps
-
-# Pin npm rather than inheriting whatever the base image ships. node:22-slim
-# currently bundles npm 10, which reads optional-dependency trees (notably the
-# @emnapi WASM fallbacks) differently from npm 11 — so a lockfile written by
-# npm 11 makes `npm ci` fail with "Missing: @emnapi/runtime from lock file".
-# The lockfile is fine; the npm reading it has to match.
-ARG NPM_VERSION=11
+FROM node:${NODE_VERSION} AS base
 
 WORKDIR /app
 
-RUN npm install -g "npm@${NPM_VERSION}"
+COPY package.json ./
+RUN npm install -g --no-audit --no-fund \
+      "npm@$(node -p 'require("./package.json").devEngines.packageManager.version')"
 
-COPY package.json package-lock.json* ./
+
+# ----------------------------------------------------------------------------
+# Stage 1 — dependencies
+# ----------------------------------------------------------------------------
+FROM base AS deps
+
+COPY package-lock.json ./
 RUN npm ci --no-audit --no-fund
 
 
@@ -43,9 +53,7 @@ RUN npm ci --no-audit --no-fund
 # into the client bundle during `next build`. Server-side secrets deliberately
 # are NOT build args — they would be baked into image layers.
 # ----------------------------------------------------------------------------
-FROM node:${NODE_VERSION} AS builder
-
-WORKDIR /app
+FROM base AS builder
 
 ARG NEXT_PUBLIC_SUPABASE_URL
 ARG NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY

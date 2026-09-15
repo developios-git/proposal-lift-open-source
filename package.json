@@ -9,6 +9,13 @@
     "node": ">=22",
     "npm": ">=11"
   },
+  "devEngines": {
+    "packageManager": {
+      "name": "npm",
+      "version": "11.19.1",
+      "onFail": "error"
+    }
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
