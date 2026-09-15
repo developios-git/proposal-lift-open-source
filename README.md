@@ -225,8 +225,8 @@ reasonable alternative.
 ## 4. Configure `.env`
 
 ```bash
-git clone https://github.com/<your-org>/proposallift.git
-cd proposallift
+git clone https://github.com/developios-git/proposal-lift-open-source.git
+cd proposal-lift-open-source
 cp .env.example .env
 ```
 
@@ -528,8 +528,8 @@ Working on the code, you don't need Docker Compose and you don't paste SQL by ha
 Supabase stack applies `supabase/migrations/` for you.
 
 ```bash
-git clone https://github.com/<your-org>/proposallift.git
-cd proposallift
+git clone https://github.com/developios-git/proposal-lift-open-source.git
+cd proposal-lift-open-source
 npm install
 npm run db:start     # starts local Supabase (Docker under the hood)
 ```
