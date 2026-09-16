@@ -71,7 +71,8 @@ export async function GET(request: NextRequest) {
         totalPages,
         currentPage: page,
       });
-    } catch {
+    } catch (error) {
+      console.error("GET /api/templates:", error);
       return NextResponse.json(
         { error: "Internal server error" },
         { status: 500 },
@@ -137,7 +138,8 @@ export async function POST(request: NextRequest) {
       }
 
       return NextResponse.json({ template });
-    } catch {
+    } catch (error) {
+      console.error("POST /api/templates:", error);
       return NextResponse.json({ error: "Failed to create template" }, { status: 500 });
     }
 }

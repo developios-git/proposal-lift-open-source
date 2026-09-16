@@ -92,7 +92,8 @@ export async function PATCH(
     }
 
     return NextResponse.json({ success: true });
-  } catch {
+  } catch (error) {
+    console.error("PATCH /api/projects/[id]:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

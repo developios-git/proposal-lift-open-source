@@ -51,7 +51,8 @@ export async function POST(request: NextRequest) {
       status: result.status,
       ...(result.status === "valid" ? {} : { message: result.message }),
     });
-  } catch {
+  } catch (error) {
+    console.error("POST /api/settings/verify-key:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 },

@@ -100,7 +100,8 @@ export async function GET(request: NextRequest) {
         totalPages,
         currentPage: page,
       });
-    } catch {
+    } catch (error) {
+      console.error("GET /api/proposals:", error);
       return NextResponse.json(
         { error: "Failed to fetch proposals" },
         { status: 500 },

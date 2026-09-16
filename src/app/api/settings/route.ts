@@ -157,7 +157,8 @@ export async function GET() {
       ...SETTINGS_DEFAULTS,
       ...(userSettings ?? {}),
     });
-  } catch {
+  } catch (error) {
+    console.error("GET /api/settings:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 },
@@ -318,7 +319,8 @@ export async function PUT(request: NextRequest) {
       { ...SETTINGS_DEFAULTS, ...updated },
       keyWarnings,
     );
-  } catch {
+  } catch (error) {
+    console.error("PUT /api/settings:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 },

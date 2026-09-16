@@ -1,9 +1,9 @@
 import { createBrowserClient } from "@supabase/ssr";
 import type { Database } from "@/types/database";
 
-// Placeholders keep `next build` working before a self-hoster has filled in
-// .env — the bundle inlines NEXT_PUBLIC_* at build time, so a missing value
-// would otherwise throw during prerender rather than at first use.
+// `next build` refuses to run without these values (see assertBuildEnv in
+// next.config.ts). The placeholders only keep module evaluation from throwing
+// in contexts that skip that check, such as tests importing this file.
 const rawUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const supabaseUrl = rawUrl.startsWith("http")
   ? rawUrl

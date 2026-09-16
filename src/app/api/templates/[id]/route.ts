@@ -35,7 +35,8 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
       }
 
       return NextResponse.json({ template });
-    } catch {
+    } catch (error) {
+      console.error("GET /api/templates/[id]:", error);
       return NextResponse.json({ error: "Failed to fetch template" }, { status: 500 });
     }
 }
@@ -117,7 +118,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       }
 
       return NextResponse.json({ template });
-    } catch {
+    } catch (error) {
+      console.error("PATCH /api/templates/[id]:", error);
       return NextResponse.json({ error: "Failed to update template" }, { status: 500 });
     }
 }

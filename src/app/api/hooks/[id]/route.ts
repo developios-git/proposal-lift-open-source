@@ -74,7 +74,8 @@ export async function PATCH(request: NextRequest,
     }
 
     return NextResponse.json({ hook });
-  } catch {
+  } catch (error) {
+    console.error("PATCH /api/hooks/[id]:", error);
     return NextResponse.json(
       { error: "Failed to update hook" },
       { status: 500 },
@@ -107,7 +108,8 @@ export async function DELETE(_request: NextRequest,
     }
 
     return NextResponse.json({ success: true });
-  } catch {
+  } catch (error) {
+    console.error("DELETE /api/hooks/[id]:", error);
     return NextResponse.json(
       { error: "Failed to delete hook" },
       { status: 500 },

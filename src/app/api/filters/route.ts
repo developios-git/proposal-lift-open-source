@@ -34,7 +34,8 @@ export async function GET() {
     }
 
     return NextResponse.json({ filters: filters || [] });
-  } catch {
+  } catch (error) {
+    console.error("GET /api/filters:", error);
     return NextResponse.json(
       { error: "Failed to fetch filters" },
       { status: 500 },
@@ -131,7 +132,8 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({ filter });
-  } catch {
+  } catch (error) {
+    console.error("POST /api/filters:", error);
     return NextResponse.json(
       { error: "Failed to create filter" },
       { status: 500 },

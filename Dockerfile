@@ -17,33 +17,30 @@ ARG NODE_VERSION=22-slim
 
 
 # ----------------------------------------------------------------------------
-# Stage 0 — base: Node plus the project's pinned npm
+# Stage 1 — dependencies
 #
-# The npm version lives in exactly one place: devEngines.packageManager in
-# package.json. It is read from there rather than repeated here, because npm
-# versions disagree about optional-dependency trees (notably the @emnapi WASM
-# fallbacks). A lockfile written by one npm can fail `npm ci` under another with
-# "Missing: @emnapi/runtime from lock file" — even between two 11.x releases.
+# Uses the npm bundled with the image. The committed lockfile installs cleanly
+# under every current npm (10.9, 11.19, 12), and CI checks that on each change.
 #
-# devEngines also makes npm refuse `install`, `ci` and `run` under any other
-# version, so every stage that runs npm must start from here.
+# What can break it is the lockfile in *your* checkout: some npm 11 releases
+# (e.g. 11.6.2, bundled with Node 24.13) silently delete the @emnapi WASM
+# fallback entries when you run `npm install`. That npm doesn't notice, but this
+# one does, and `npm ci` stops with "Missing: @emnapi/runtime from lock file".
+# The message below says how to recover.
 # ----------------------------------------------------------------------------
-FROM node:${NODE_VERSION} AS base
+FROM node:${NODE_VERSION} AS deps
 
 WORKDIR /app
 
-COPY package.json ./
-RUN npm install -g --no-audit --no-fund \
-      "npm@$(node -p 'require("./package.json").devEngines.packageManager.version')"
-
-
-# ----------------------------------------------------------------------------
-# Stage 1 — dependencies
-# ----------------------------------------------------------------------------
-FROM base AS deps
-
-COPY package-lock.json ./
-RUN npm ci --no-audit --no-fund
+COPY package.json package-lock.json ./
+RUN npm ci --no-audit --no-fund || { \
+      echo ""; \
+      echo "npm ci failed. If the error above says 'Missing: ... from lock file', your"; \
+      echo "package-lock.json was rewritten by an npm that drops entries. Fix it with:"; \
+      echo "  git checkout package-lock.json"; \
+      echo "and, if you install locally, upgrade npm first: npm install -g npm@11"; \
+      exit 1; \
+    }
 
 
 # ----------------------------------------------------------------------------
@@ -53,7 +50,9 @@ RUN npm ci --no-audit --no-fund
 # into the client bundle during `next build`. Server-side secrets deliberately
 # are NOT build args — they would be baked into image layers.
 # ----------------------------------------------------------------------------
-FROM base AS builder
+FROM node:${NODE_VERSION} AS builder
+
+WORKDIR /app
 
 ARG NEXT_PUBLIC_SUPABASE_URL
 ARG NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY

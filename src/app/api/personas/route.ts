@@ -106,7 +106,8 @@ export async function GET(request: NextRequest) {
       totalPages: Math.max(1, Math.ceil(totalCount / limit)),
       currentPage: page,
     });
-  } catch {
+  } catch (error) {
+    console.error("GET /api/personas:", error);
     return NextResponse.json(
       { error: "Failed to fetch personas" },
       { status: 500 },
@@ -231,7 +232,8 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({ persona });
-  } catch {
+  } catch (error) {
+    console.error("POST /api/personas:", error);
     return NextResponse.json(
       { error: "Failed to create persona" },
       { status: 500 },

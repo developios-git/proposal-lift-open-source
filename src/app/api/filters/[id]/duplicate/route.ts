@@ -84,7 +84,8 @@ export async function POST(_request: Request,
     }
 
     return NextResponse.json({ filter });
-  } catch {
+  } catch (error) {
+    console.error("POST /api/filters/[id]/duplicate:", error);
     return NextResponse.json(
       { error: "Failed to duplicate filter" },
       { status: 500 },

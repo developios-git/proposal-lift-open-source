@@ -6,6 +6,7 @@ import { resolveConfirmParams } from "@/lib/auth/confirm-params";
 import { resolvePostAuthRedirect } from "@/lib/account/gate";
 import { seedNewUserDefaults } from "@/lib/proposals/signup-default-template";
 import type { AuthError, User } from "@supabase/supabase-js";
+import { getRequestOrigin } from "@/lib/url";
 import { NextResponse, type NextRequest } from "next/server";
 
 /**
@@ -36,7 +37,8 @@ async function sessionEmailConfirmed(
 }
 
 export async function GET(request: NextRequest) {
-  const { searchParams, origin } = new URL(request.url);
+  const { searchParams } = new URL(request.url);
+  const origin = getRequestOrigin(request);
 
   const params = resolveConfirmParams(searchParams);
   // Only a customised template supplies this; the `code` redirect never does, so

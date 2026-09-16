@@ -135,7 +135,8 @@ export async function GET(request: NextRequest) {
         unembedded: unembeddedCount ?? 0,
       },
     });
-  } catch {
+  } catch (error) {
+    console.error("GET /api/projects:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 },
@@ -246,7 +247,8 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({ project: savedProject }, { status: 201 });
-  } catch {
+  } catch (error) {
+    console.error("POST /api/projects:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 },

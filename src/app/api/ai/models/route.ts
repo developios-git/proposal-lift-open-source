@@ -102,7 +102,8 @@ export async function GET() {
     ]);
 
     return NextResponse.json({ openai, anthropic } satisfies ModelCatalog);
-  } catch {
+  } catch (error) {
+    console.error("GET /api/ai/models:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 },

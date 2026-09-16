@@ -11,7 +11,8 @@ export async function POST() {
     // reset form by the proxy.
     response.cookies.delete("auth-type");
     return response;
-  } catch {
+  } catch (error) {
+    console.error("POST /api/auth/logout:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 },

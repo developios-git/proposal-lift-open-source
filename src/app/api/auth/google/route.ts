@@ -1,6 +1,7 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { isGoogleAuthEnabled } from "@/lib/auth/google-auth-enabled";
 import { safeAuthRedirectPath } from "@/lib/auth/safe-auth-redirect";
+import { getRequestOrigin } from "@/lib/url";
 import { NextResponse, type NextRequest } from "next/server";
 
 /**
@@ -39,7 +40,7 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = await createSupabaseServerClient();
-    const origin = request.nextUrl.origin;
+    const origin = getRequestOrigin(request);
     const callbackUrl = next
       ? `${origin}/auth/callback?next=${encodeURIComponent(next)}`
       : `${origin}/auth/callback`;
@@ -56,7 +57,8 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({ url: data.url });
-  } catch {
+  } catch (error) {
+    console.error("POST /api/auth/google:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 },

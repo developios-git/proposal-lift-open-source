@@ -172,7 +172,8 @@ export async function PATCH(request: Request,
     }
 
     return NextResponse.json({ filter });
-  } catch {
+  } catch (error) {
+    console.error("PATCH /api/filters/[id]:", error);
     return NextResponse.json(
       { error: "Failed to update filter" },
       { status: 500 },
@@ -211,7 +212,8 @@ export async function DELETE(_request: Request,
     }
 
     return NextResponse.json({ success: true });
-  } catch {
+  } catch (error) {
+    console.error("DELETE /api/filters/[id]:", error);
     return NextResponse.json(
       { error: "Failed to delete filter" },
       { status: 500 },

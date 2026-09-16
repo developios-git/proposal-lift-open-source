@@ -24,6 +24,11 @@ services:
         NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY}
         NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
     env_file: .env
+    # .env's PORT picks the host port (below). Without this, env_file would also
+    # pass it into the container and move the server off 3000, breaking the
+    # mapping. `environment` takes precedence over env_file.
+    environment:
+      PORT: "3000"
     ports:
       - "${PORT:-3000}:3000"
     restart: unless-stopped

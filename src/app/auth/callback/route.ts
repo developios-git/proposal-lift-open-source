@@ -4,6 +4,7 @@ import { createSupabaseServiceClient } from "@/lib/supabase/server";
 import { resolvePostAuthRedirect } from "@/lib/account/gate";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { getRequestOrigin } from "@/lib/url";
 import { NextResponse, type NextRequest } from "next/server";
 
 /**
@@ -16,7 +17,8 @@ import { NextResponse, type NextRequest } from "next/server";
  * account, and route.
  */
 export async function GET(request: NextRequest) {
-  const { searchParams, origin } = new URL(request.url);
+  const { searchParams } = new URL(request.url);
+  const origin = getRequestOrigin(request);
   const code = searchParams.get("code");
   const rawNext = searchParams.get("next");
 

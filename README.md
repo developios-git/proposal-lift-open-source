@@ -147,8 +147,8 @@ That's all. You do not need Node installed.
 
 **To work on the code (local path):**
 
-- Node 22 or newer, and the exact npm version pinned in `package.json` — see
-  [The pinned npm version](#the-pinned-npm-version)
+- Node 22 or 24, with the npm it ships with — but see
+  [npm versions and the lockfile](#npm-versions-and-the-lockfile)
 - Docker, which the local Supabase stack runs on top of
 
 ## Choose your install path
@@ -275,7 +275,7 @@ unreadable, and every account has to re-enter the affected credentials by hand.
 
 | Variable | What it does |
 |---|---|
-| `NEXT_PUBLIC_APP_URL` | Your app's public address. Ends up inside confirmation and reset emails, so set it before you deploy. Defaults to `http://localhost:3000`. |
+| `NEXT_PUBLIC_APP_URL` | Your app's public address. Ends up inside confirmation and reset emails, so set it before you deploy. Defaults to `http://localhost:3000`. On Vercel, leave it unset — the deployment's own domain is used, and pinning it here would send preview deployments to production. |
 | `PORT` | Which **host** port maps to the container. See the note below. |
 | `GOOGLE_AUTH_ENABLED` | Shows the Google sign-in button. See [Google sign-in](#google-sign-in). |
 | `RESEND_API_KEY` | Sends job-alert email. Not used for authentication. |
@@ -590,31 +590,24 @@ The Supabase CLI runs through `npx supabase@<pinned version>` rather than as a d
 in eight per-platform binaries the app never uses, and those make the lockfile sensitive to which
 npm version installed it.
 
-### The pinned npm version
+### npm versions and the lockfile
 
-npm is pinned to one exact version, in `devEngines.packageManager` in `package.json`. npm refuses
-`install`, `ci` and `run` under any other version, with `EBADDEVENGINES`. Install the pinned one
-(the command works in bash and PowerShell):
+Any current npm installs this project: 10.9 (Node 22), 11.19 (Node 24) and 12 are all tested.
 
-```bash
-npm install -g npm@$(node -p "require('./package.json').devEngines.packageManager.version")
-```
-
-The pin exists because npm releases disagree about optional dependencies: a lockfile written by one
-version can fail `npm ci` under another — even between two 11.x releases. The Docker image reads the
-same field, so your machine and the image always run the same npm.
-
-**To move to a newer npm**, change it in that one place and regenerate the lockfile:
+The exception is some older npm 11 releases, such as **11.6.2, which ships with Node 24.13**. Running
+`npm install` with one of those quietly deletes the `@emnapi` entries from `package-lock.json`.
+Nothing fails on your machine, but the next `docker compose up --build` stops with
+`Missing: @emnapi/runtime from lock file`. npm warns you (`EBADDEVENGINES`, from
+`devEngines` in `package.json`) when yours is one of them. The warning never blocks anything. Upgrade
+to get rid of it:
 
 ```bash
-# 1. edit devEngines.packageManager.version in package.json, then:
-npm install -g npm@<new version>
-npm install
-# 2. commit package.json and package-lock.json together
+npm install -g npm@11
 ```
 
-CI (`.github/workflows/lockfile.yml`) runs the image's `npm ci` on every change to these files, so a
-lockfile from a different npm fails there rather than on someone's `docker compose up --build`.
+**Changing dependencies:** commit `package.json` and `package-lock.json` together. CI
+(`.github/workflows/lockfile.yml`) installs the lockfile on Node 22, Node 24, the newest npm, and in
+the Docker image, so a damaged lockfile fails there instead of on someone's machine.
 
 ## Project structure
 
@@ -682,6 +675,15 @@ Check the redirect allowlist in [step 3](#3-configure-supabase-auth-urls) and `N
 — and remember that one is compiled in, so it needs a rebuild. Supabase's built-in sender is also
 rate limited; configure SMTP for real use.
 
+**A confirmation or sign-in link lands on `0.0.0.0:3000`, and the browser says
+ERR_ADDRESS_INVALID.**
+Verification itself succeeded — only the final redirect was built wrong, so re-open the app at
+`http://localhost:3000` and you will find yourself already verified. `0.0.0.0` is a
+bind-everything address the server listens on, not one a browser can connect to. Redirects are
+built by `getRequestOrigin` in `src/lib/url.ts`, which reads the request's `Host` header; seeing
+this means something bypassed it and went back to `new URL(request.url).origin`, which Next.js
+derives from the bind address instead.
+
 **Saving Upwork credentials fails.**
 `UPWORK_CREDENTIALS_ENCRYPTION_KEY` is missing or malformed. It must be 64 hex characters. Set it
 and restart.
@@ -708,13 +710,26 @@ to jobs.
 **Job alerts never fire.**
 Nothing schedules them out of the box. See [Job alerts](#job-alerts).
 
-**`npm ci` fails with `Missing: @emnapi/runtime from lock file`.**
-`package-lock.json` was written by a different npm version than the one reading it. Install the
-[pinned npm](#the-pinned-npm-version), run `npm install`, and commit the updated lockfile.
+**The container keeps restarting.**
+Run `docker compose logs app`. If it says `ProposalLift cannot start. Fix these environment
+variables`, it lists each one and how to fix it. A missing `NEXT_PUBLIC_` value needs
+`docker compose up --build`; anything else needs `docker compose up -d`.
 
-**npm fails with `EBADDEVENGINES`.**
-Your npm isn't the version pinned in `package.json`. The error prints the required version; install
-it with the command under [The pinned npm version](#the-pinned-npm-version).
+**The build fails with `Cannot build ProposalLift`.**
+A `NEXT_PUBLIC_` value in `.env` is empty, still the `.env.example` placeholder, or not a URL. The
+message names it.
+
+**An API call answers "Internal server error".**
+The real error is in the server log: `docker compose logs app`, or your Vercel function logs.
+
+**`npm ci` fails with `Missing: @emnapi/runtime from lock file`.**
+Your `package-lock.json` was rewritten by an npm that drops entries — see
+[npm versions and the lockfile](#npm-versions-and-the-lockfile). Restore it with
+`git checkout package-lock.json`, then upgrade npm before your next `npm install`.
+
+**npm warns `EBADDEVENGINES`.**
+Only a warning: your npm is one of the releases that damage the lockfile. Run
+`npm install -g npm@11`.
 
 For extension problems see **Extension** in the running app, or
 [docs/extension.md](docs/extension.md); for scheduling see [docs/cron.md](docs/cron.md).
@@ -754,8 +769,12 @@ Yes — multiple accounts work, and they share nothing at all. There are no team
 shared portfolios; each account is fully separate.
 
 **Can I deploy it to Vercel?**
-Docker Compose is the only path that's supported and tested. Some scaffolding for a Vercel deploy
-survives in the code, but you'd be working it out yourself.
+Docker Compose is the only path that's supported and tested. A Vercel project installs and builds
+(set the same environment variables there), but the rest is yours to work out — job alerts, for
+example, aren't wired to Vercel Cron. Auth URLs do work without extra configuration: leave
+`NEXT_PUBLIC_APP_URL` unset and each deployment uses its own domain, production and preview alike.
+For previews to sign in, add a wildcard such as `https://*-yourorg.vercel.app/**` to the Supabase
+redirect allowlist.
 
 **Does it apply to jobs for me, or spend connects?**
 No. It writes drafts. Submitting is always something you do by hand, on Upwork.

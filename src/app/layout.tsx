@@ -16,8 +16,9 @@ import { Toaster } from "sonner";
 export const metadata: Metadata = {
   // Derived, never hardcoded: a fixed domain would make every self-hoster's
   // canonical and OG URLs point at someone else's instance.
+  // `||`, not `??`: a blank .env value arrives as "", and new URL("") throws.
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
+    process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
   ),
   title: {
     default: "ProposalLift",

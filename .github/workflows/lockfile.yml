@@ -1,10 +1,15 @@
-# Fails when package-lock.json can't be installed by the npm version pinned in
-# package.json (devEngines.packageManager). It runs the Docker image's own
-# dependency stage, so it is the exact `npm ci` a self-hoster's
-# `docker compose up --build` runs.
+# Fails when the committed package-lock.json can't be installed by the npm
+# versions self-hosters actually run:
 #
-# A lockfile written by a different npm — by a contributor, or by an automated
-# dependency update — fails here instead of on someone else's machine.
+#   - Node 22 and Node 24 with their bundled npm (what local installs and
+#     Vercel use)
+#   - the newest npm, as early warning before users upgrade to it
+#   - the Docker image's own dependency stage (what `docker compose up --build`
+#     runs)
+#
+# Some npm 11 releases rewrite the lockfile without the @emnapi WASM fallback
+# entries. The npm that wrote it installs fine; the others reject it. A lockfile
+# like that fails here instead of on someone else's machine.
 name: Lockfile
 
 on:
@@ -27,6 +32,36 @@ permissions:
 
 jobs:
   npm-ci:
+    name: npm ci (Node ${{ matrix.node }}, npm ${{ matrix.npm }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - node: 22
+            npm: bundled
+          - node: 24
+            npm: bundled
+          - node: 24
+            npm: latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Install npm@latest
+        if: matrix.npm == 'latest'
+        run: npm install -g npm@latest
+
+      - name: npm ci
+        run: |
+          npm --version
+          npm ci --ignore-scripts --no-audit --no-fund
+
+  docker-deps:
+    name: Docker dependency stage
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7

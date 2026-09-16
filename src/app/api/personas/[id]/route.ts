@@ -61,7 +61,8 @@ export async function GET(
     }
 
     return NextResponse.json({ persona });
-  } catch {
+  } catch (error) {
+    console.error("GET /api/personas/[id]:", error);
     return NextResponse.json(
       { error: "Failed to fetch persona" },
       { status: 500 },
@@ -183,7 +184,8 @@ export async function PATCH(
     }
 
     return NextResponse.json({ persona: updated });
-  } catch {
+  } catch (error) {
+    console.error("PATCH /api/personas/[id]:", error);
     return NextResponse.json(
       { error: "Failed to update persona" },
       { status: 500 },
@@ -222,7 +224,8 @@ export async function DELETE(
     }
 
     return NextResponse.json({ success: true });
-  } catch {
+  } catch (error) {
+    console.error("DELETE /api/personas/[id]:", error);
     return NextResponse.json(
       { error: "Failed to delete persona" },
       { status: 500 },

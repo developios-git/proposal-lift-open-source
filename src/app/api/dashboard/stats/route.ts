@@ -54,7 +54,8 @@ export async function GET() {
       templateCount: templateCountResult.count ?? 0,
       recentProposals: recentProposalsResult.data ?? [],
     });
-  } catch {
+  } catch (error) {
+    console.error("GET /api/dashboard/stats:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 },
