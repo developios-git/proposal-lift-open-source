@@ -74,8 +74,8 @@ export const EXTENSION_STEPS: ExtensionStep[] = [
   {
     title: "Open a job's apply page",
     body:
-      "The panel appears bottom-right on the apply page only \u2014 the URL shaped like " +
-      "/nx/proposals/job/~.../apply/... A job's public listing page will not show it.",
+      "The panel appears bottom-right on the apply page only \u2014 the URL starting with " +
+      "/nx/proposals/job/~.../apply. A job's public listing page will not show it.",
   },
   {
     title: "Write the draft",

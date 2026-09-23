@@ -221,7 +221,7 @@ the `redirect_uri`. Same cause: the server does not know this extension's id.
 120 seconds.
 
 **Nothing appears on Upwork job pages** — the panel only injects on the *apply* page, whose URL
-looks like `/nx/proposals/job/~.../apply/...`. A job's public listing page is not enough. If you
+starts with `/nx/proposals/job/~.../apply`. A job's public listing page is not enough. If you
 are on the right page, check that the extension has been rebuilt and
 reloaded.
 
